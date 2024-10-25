@@ -8,15 +8,23 @@
     "lib",
     "dist"
   ],
-  "license": "MIT",
+  "author": "xpeng <contact@xpengs.com>",
+  "license": "GPL-3.0-only",
   "scripts": {},
   "keywords": [
-    "chatbot",
+    "bot",
     "koishi",
-    "plugin"
+    "whatsapp",
+    "adapter",
+    "chatbot",
+    "satori"
   ],
-  "devDependencies": {},
+  "devDependencies": {
+    "@cordisjs/plugin-server": "^0.2.3",
+    "@satorijs/core": "^4.2.1",
+    "cordis": "^3.18.0"
+  },
   "peerDependencies": {
-    "koishi": "^4.18.0"
+    "@satorijs/core": "^4.2.1"
   }
 }

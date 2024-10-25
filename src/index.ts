@@ -1,11 +1,9 @@
-import { Context, Schema } from 'koishi'
+import WhatsAppAdapter from './adapter'
+import WhatsAppBot from './bot'
 
-export const name = 'adapter-whatsapp-web'
+export { WhatsAppAdapter, WhatsAppBot }
 
-export interface Config {}
+export * from './adapter'
+export * from './bot'
 
-export const Config: Schema<Config> = Schema.object({})
-
-export function apply(ctx: Context) {
-  // write your plugin here
-}
+export default WhatsAppAdapter
