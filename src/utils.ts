@@ -1,12 +1,12 @@
 import { Session, h, Universal, base64ToArrayBuffer, is } from "koishi";
 import {} from "@cordisjs/plugin-server";
-import WhatsAppBot from "./bot";
+import {WhatsAppBot} from "./bot";
 import * as WhatsAppWeb from "whatsapp-web.js";
 import { MessageRawData } from "./types";
 
 export async function adaptSession(
   bot: WhatsAppBot,
-  input: WhatsAppWeb.Message | WhatsAppWeb.GroupNotification | WhatsAppWeb.Chat
+  input: WhatsAppWeb.Message | WhatsAppWeb.GroupNotification | WhatsAppWeb.Chat | WhatsAppWeb.Reaction
 ) {
   const result: Session[] = [];
   bot.dispatch(
@@ -108,8 +108,8 @@ export async function decodeMessage(message: WhatsAppWeb.Message): Promise<Unive
   return result;
 }
 
-export async function decodeGuild(input: WhatsAppWeb.GroupNotification | WhatsAppWeb.Message) {
-  const chat = await input.getChat();
+export async function decodeGuild(input: WhatsAppWeb.GroupNotification | WhatsAppWeb.Message | WhatsAppWeb.Chat) {
+  const chat = isInstanceOfChat(input) ? input : await input.getChat();
   const result: Universal.Guild = {
     id: (input.id as WhatsAppWeb.MessageId).id,
     name: chat.name,
@@ -118,14 +118,21 @@ export async function decodeGuild(input: WhatsAppWeb.GroupNotification | WhatsAp
 }
 
 export async function decodeUser<
-  T extends WhatsAppWeb.Message | WhatsAppWeb.GroupNotification,
-  R = T extends WhatsAppWeb.Message ? Universal.User : Universal.User[]
+  T extends WhatsAppWeb.Message | WhatsAppWeb.Contact | WhatsAppWeb.GroupNotification,
+  R = T extends WhatsAppWeb.GroupNotification ? Universal.User[] : Universal.User
 >(input: T): Promise<R> {
   if (isInstanceOfMessage(input)) {
     const rawData = input.rawData as MessageRawData;
     const result: Universal.User = {
       id: input.author ? input.author : input.from,
       name: rawData.notifyName,
+    };
+    return result as R;
+  } else if (isInstanceOfContact(input)) {
+    const result: Universal.User = {
+      id: input.id._serialized,
+      name: input.name,
+      avatar: await input.getProfilePicUrl(),
     };
     return result as R;
   } else if (isInstanceOfGroupNotification(input)) {
@@ -146,7 +153,7 @@ export const decodeChannel = async (input: WhatsAppWeb.Message | WhatsAppWeb.Gro
     const result: Universal.Channel = {
       id: input.id.remote,
       type: input.author ? Universal.Channel.Type.TEXT : Universal.Channel.Type.DIRECT,
-      name: (input.rawData as MessageRawData).notifyName,
+      name: input.author ? (await input.getChat()).name : (input.rawData as MessageRawData).notifyName
     };
     return result;
   } else if (isInstanceOfGroupNotification(input)) {
@@ -176,4 +183,8 @@ function isInstanceOfGroupNotification(input: any): input is WhatsAppWeb.GroupNo
 
 function isInstanceOfChat(input: any): input is WhatsAppWeb.Chat {
   return "archived" in input;
+}
+
+function isInstanceOfContact(input: any): input is WhatsAppWeb.Contact {
+  return "isWAContact" in input;
 }

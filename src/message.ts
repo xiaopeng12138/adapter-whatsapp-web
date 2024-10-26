@@ -26,47 +26,58 @@ const SUPPORTED_MEDIA = [
 ];
 
 export class WhatsAppMessageEncoder<C extends Context = Context> extends MessageEncoder<C, WhatsAppBot<C>> {
-  private textBuffer: string;
-  private content: MessageSendContent;
+  private textBuffer: string = "";
+  private content: MessageSendContent = null;
   private messageOptions: WhatsAppWeb.MessageSendOptions = {};
   private quoteId: string;
 
   async flush(): Promise<void> {
+    this.bot.logger.debug("Sending message textBuffer", this.textBuffer);
 
-    if (!this.content) 
-      this.content = this.textBuffer;
-    else 
-      this.messageOptions.caption = this.textBuffer;
+    if (!this.content) this.content = this.textBuffer;
+    else this.messageOptions.caption = this.textBuffer;
 
     if (!this.content) return;
-    
-    if (this.quoteId) this.messageOptions.quotedMessageId = this.quoteId;
 
-    this.bot.ctx.logger('whatsapp-web').debug("Sending message", this.channelId, this.content, this.messageOptions);
+    this.bot.logger.debug("Sending message", this.channelId, this.content, this.messageOptions);
 
-    await this.bot.internal.sendMessage(this.channelId, this.content, this.messageOptions);
+    if (this.quoteId) {
+      this.messageOptions.quotedMessageId = this.quoteId;
+      const quote = await this.getQuoteMessage(this.channelId, this.quoteId);
+      if (quote) {
+        await quote.reply(this.content, this.channelId, this.messageOptions);
+      }
+    } else {
+      await this.bot.internal.sendMessage(this.channelId, this.content, this.messageOptions);
+    }
 
     this.textBuffer = "";
     this.content = null;
     this.messageOptions = {};
 
-    const session = this.bot.session()
-      session.type = 'message'
-      session.messageId = this.channelId
-      session.channelId = this.channelId
-      session.guildId = this.channelId
-      session.isDirect = this.channelId.includes('@c')
-      session.event.user = this.bot.user
-      session.timestamp = Date.now()
-      session.app.emit(session, 'send', session)
-      this.results.push(session.event.message)
+    const session = this.bot.session();
+    session.type = "message";
+    session.messageId = this.channelId;
+    session.channelId = this.channelId;
+    session.guildId = this.channelId;
+    session.isDirect = this.channelId.includes("@c");
+    session.event.user = this.bot.user;
+    session.timestamp = Date.now();
+    session.app.emit(session, "send", session);
+    this.results.push(session.event.message);
+  }
+
+  async getQuoteMessage(channelId: string, messageId: string): Promise<WhatsAppWeb.Message> {
+    const chat = await this.bot.internal.getChatById(channelId);
+    const messages = await chat.fetchMessages({ limit: 0 });
+    return messages.find((m) => m.id.id === messageId);
   }
 
   async createMessageMedia(attrs: Dict) {
     const { filename, data, type } = await this.bot.ctx.http.file(attrs.src || attrs.url, attrs);
 
     if (!SUPPORTED_MEDIA.includes(type)) {
-      this.bot.ctx.logger("whatsapp-web").warn(`Unsupported media type: ${type}`);
+      this.bot.logger.warn(`Unsupported media type: ${type}`);
       return;
     }
     const media = new WhatsAppWeb.MessageMedia(type, arrayBufferToBase64(data), filename);
@@ -80,19 +91,15 @@ export class WhatsAppMessageEncoder<C extends Context = Context> extends Message
     } else if ((type === "image" || type === "img") && (attrs.src || attrs.url)) {
       const media = await this.createMessageMedia(attrs);
       this.content = media;
-
     } else if (type === "audio" && (attrs.src || attrs.url)) {
       const media = await this.createMessageMedia(attrs);
       this.content = media;
-
     } else if (type === "video" && (attrs.src || attrs.url)) {
       const media = await this.createMessageMedia(attrs);
       this.content = media;
-
     } else if (type === "file") {
       const media = await this.createMessageMedia(attrs);
       this.content = media;
-
     } else if (type === "face") {
       if (attrs.platform && attrs.platform !== this.bot.platform) {
         return this.render(children);
@@ -126,5 +133,6 @@ export class WhatsAppMessageEncoder<C extends Context = Context> extends Message
     } else {
       await this.render(children);
     }
+    this.bot.logger.debug("Visiting", type, attrs, children);
   }
 }
