@@ -28,14 +28,14 @@
     "satori"
   ],
   "devDependencies": {
-    "@cordisjs/plugin-server": "^0.2.3",
-    "@satorijs/core": "^4.2.1",
-    "cordis": "^3.18.0",
-    "@koishijs/client": "^5.11.0"
+    "@cordisjs/plugin-server": "^0.2.4",
+    "@koishijs/client": "^5.29.4",
+    "@satorijs/core": "^4.2.9",
+    "cordis": "^3.18.1"
   },
   "peerDependencies": {
-    "@satorijs/core": "^4.2.1",
-    "@koishijs/plugin-console": "^5.11.0",
+    "@koishijs/plugin-console": "^5.29.4",
+    "@satorijs/core": "^4.2.9",
     "qrcode": "^1.5.4",
     "whatsapp-web.js": "^1.23.0"
   }
