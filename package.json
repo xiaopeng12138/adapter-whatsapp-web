@@ -9,7 +9,15 @@
     "dist"
   ],
   "author": "xpeng <contact@xpengs.com>",
-  "license": "GPL-3.0-only",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xiaopeng12138/adapter-whatsapp-web.git"
+  },
+  "bugs": {
+    "url": "https://github.com/xiaopeng12138/adapter-whatsapp-web/issues"
+  },
+  "homepage": "https://github.com/xiaopeng12138/adapter-whatsapp-web",
   "scripts": {},
   "keywords": [
     "bot",
