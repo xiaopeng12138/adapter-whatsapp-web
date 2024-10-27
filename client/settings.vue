@@ -1,24 +1,23 @@
 <template>
   <k-comment class="WhatsAppWeb" v-if="data" :type="type">
     <template v-if="data.status === 'offline'">
-      <p>未连接到 WhatsApp-Web 客户端</p>
+      <p>WhatsApp-Web client offline</p>
     </template>
     <template v-else-if="data.status === 'error'">
       <p>{{ data.message }}</p>
     </template>
     <template v-else-if="data.status === 'init'">
-      <p>正在创建 WhatsApp-Web 客户端</p>
+      <p>Initializing WhatsApp-Web client</p>
     </template>
     <template v-else-if="data.status === 'continue'">
-      <p>账号登录中……</p>
+      <p>Login……</p>
     </template>
     <template v-else-if="data.status === 'success'">
-      <p>已成功连接 WhatsApp-Web 客户端</p>
+      <p>Connent to WhatsApp-Web Successful</p>
     </template>
     <template v-else-if="data.status === 'qrcode'">
-      <p>请使用手机登录 Whatsapp 扫描二维码：</p>
-      <img class="qrcode" :src="data.image" />
       <p v-if="data.message">{{ data.message }}</p>
+      <img class="qrcode" :src="data.image" />
     </template>
   </k-comment>
 </template>
