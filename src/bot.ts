@@ -1,4 +1,4 @@
-import { Bot, Context, h, Universal, Schema } from "koishi";
+import { Bot, Context, Universal, Schema } from "koishi";
 import WhatsAppAdapter from "./adapter";
 import * as WhatsAppWeb from "whatsapp-web.js";
 import { WhatsAppMessageEncoder } from "./message";

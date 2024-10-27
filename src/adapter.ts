@@ -22,7 +22,7 @@ class WhatsAppAdapter<C extends Context = Context> extends Adapter<C, WhatsAppBo
       bot.logger.info("QR RECEIVED", qrData);
 
       const qrImg = await QRCode.toDataURL(qrData);
-      bot.consoleMessage = { status: "qrcode", image: qrImg, message: "Scan the QR code with your phone" };
+      bot.consoleMessage = { status: "qrcode", image: qrImg, message: "Scan the QR code with your WhatsApp" };
       bot.event.emit("consoleMessage");
     });
 
