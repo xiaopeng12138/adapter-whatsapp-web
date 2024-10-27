@@ -1,14 +1,20 @@
-import { Bot, Context, h, Universal, Schema, Logger } from "koishi";
+import { Bot, Context, h, Universal, Schema } from "koishi";
 import WhatsAppAdapter from "./adapter";
 import * as WhatsAppWeb from "whatsapp-web.js";
 import { WhatsAppMessageEncoder } from "./message";
 import path from "path";
-import { decodeChannel, decodeGuild, decodeMessage, decodeUser } from "./utils";
-import { channel } from "diagnostics_channel";
+import { decodeChannel, decodeGuild, decodeMessage, decodeUser, } from "./utils";
+import {} from '@koishijs/plugin-console'
+import { Launcher } from ".";
+import { ConsoleMessage } from "./types";
+import EventEmitter from "events";
 
 export class WhatsAppBot<C extends Context = Context> extends Bot<C> {
   internal: WhatsAppWeb.Client;
   static MessageEncoder = WhatsAppMessageEncoder;
+
+  consoleMessage: ConsoleMessage = Object.create(null);
+  event: EventEmitter = new EventEmitter();
 
   constructor(ctx: C, config: WhatsAppBot.Config) {
     super(ctx, config, "whatsapp-web");
@@ -21,6 +27,7 @@ export class WhatsAppBot<C extends Context = Context> extends Bot<C> {
     });
 
     ctx.plugin(WhatsAppAdapter, this);
+    ctx.plugin(Launcher, this);
 
     return this;
   }
@@ -33,11 +40,14 @@ export class WhatsAppBot<C extends Context = Context> extends Bot<C> {
   async getLogin() {
     try {
       this.selfId = this.internal.info.wid._serialized;
+      this.config.selfId = this.selfId;
       this.user.name = this.internal.info.pushname;
       this.user.avatar = await (await this.internal.getContactById(this.selfId)).getProfilePicUrl();
       return this.toJSON();
     } catch (e) {
       this.logger.error("Failed to initialize bot", e);
+      this.consoleMessage = { status: "error", message: "Failed to initialize bot" };
+      this.event.emit("consoleMessage");
     }
   }
 
@@ -101,10 +111,12 @@ export class WhatsAppBot<C extends Context = Context> extends Bot<C> {
 export namespace WhatsAppBot {
   export interface Config {
     authSessionLocation?: string;
+    selfId?: string;
   }
   export const Config: Schema<Config> = Schema.object({
     authSessionLocation: Schema.string()
       .description("登入信息存放位置名称，存放在data下")
       .default("adapter-whatsapp-web"),
+    selfId: Schema.string().description("自身ID").hidden(),
   });
 }

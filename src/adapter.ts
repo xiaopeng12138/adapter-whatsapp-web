@@ -2,8 +2,8 @@ import { Adapter, Context, Logger, Schema } from "koishi";
 import { } from "@cordisjs/plugin-server";
 import {WhatsAppBot} from "./bot";
 import * as WhatsAppWeb from "whatsapp-web.js";
-import * as qrcode from "qrcode-terminal";
 import { adaptSession,} from "./utils";
+import QRCode from 'qrcode'
 
 class WhatsAppAdapter<C extends Context = Context> extends Adapter<C, WhatsAppBot<C>> {
 
@@ -12,20 +12,25 @@ class WhatsAppAdapter<C extends Context = Context> extends Adapter<C, WhatsAppBo
     this.ctx.on("ready", async () => {
       bot.logger.info("Adapter is ready.");
       bot.logger.info("Client start initializing...");
+      bot.consoleMessage = { status: "init", message: "Initializing WhatsApp Web Client" };
+      bot.event.emit("consoleMessage");
       bot.internal.initialize();
     });
 
-    bot.internal.on("qr", (qr) => {
+    bot.internal.on("qr", async (qrData) => {
       // Generate and scan this code with your phone
-      bot.logger.info("QR RECEIVED", qr);
-      qrcode.generate(qr, { small: true }, (code) => {
-        console.log(code);
-        //bot.logger.info(code);
-      });
+      bot.logger.info("QR RECEIVED", qrData);
+
+      const qrImg = await QRCode.toDataURL(qrData);
+      bot.consoleMessage = { status: "qrcode", image: qrImg, message: "Scan the QR code with your phone" };
+      bot.event.emit("consoleMessage");
     });
 
     bot.internal.on("ready", async () => {
       bot.logger.debug("Client is ready!", bot.internal.info);
+
+      bot.consoleMessage = { status: "success", message: "WhatsApp Web Client is ready" };
+      bot.event.emit("consoleMessage");
 
       bot.adapter = this;
       
@@ -56,11 +61,17 @@ class WhatsAppAdapter<C extends Context = Context> extends Adapter<C, WhatsAppBo
 
       return Promise.resolve();
     });
+
+    bot.internal.on("disconnected", (reason) => {
+      bot.logger.error("Client was disconnected!", reason);
+      bot.consoleMessage = { status: "offline", message: "WhatsApp Web Client was disconnected" };
+      bot.event.emit("consoleMessage");
+      bot.offline();
+    });
   }
 
   disconnect(bot: WhatsAppBot<C>): Promise<void> {
     bot.internal.destroy();
-
     bot.logger.info("WhatsApp adapter is disconnected.");
     return Promise.resolve();
   }

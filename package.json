@@ -22,9 +22,13 @@
   "devDependencies": {
     "@cordisjs/plugin-server": "^0.2.3",
     "@satorijs/core": "^4.2.1",
-    "cordis": "^3.18.0"
+    "cordis": "^3.18.0",
+    "@koishijs/client": "^5.11.0"
   },
   "peerDependencies": {
-    "@satorijs/core": "^4.2.1"
+    "@satorijs/core": "^4.2.1",
+    "@koishijs/plugin-console": "^5.11.0",
+    "qrcode": "^1.5.4",
+    "whatsapp-web.js": "^1.23.0"
   }
 }
