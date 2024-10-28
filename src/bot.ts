@@ -3,8 +3,8 @@ import WhatsAppAdapter from "./adapter";
 import * as WhatsAppWeb from "whatsapp-web.js";
 import { WhatsAppMessageEncoder } from "./message";
 import path from "path";
-import { decodeChannel, decodeGuild, decodeMessage, decodeUser, } from "./utils";
-import {} from '@koishijs/plugin-console'
+import { decodeChannel, decodeGuild, decodeMessage, decodeUser } from "./utils";
+import {} from "@koishijs/plugin-console";
 import { Launcher } from ".";
 import { ConsoleMessage } from "./types";
 import EventEmitter from "events";
@@ -20,10 +20,21 @@ export class WhatsAppBot<C extends Context = Context> extends Bot<C> {
     super(ctx, config, "whatsapp-web");
     this.logger.level = 3;
 
+    const puppeteerArgs = [];
+    if (config.noSandBox) {
+      puppeteerArgs.push("--no-sandbox");
+    }
+    if (config.disableSetuidSandbox) {
+      puppeteerArgs.push("--disable-setuid-sandbox");
+    }
+
     this.internal = new WhatsAppWeb.Client({
       authStrategy: new WhatsAppWeb.LocalAuth({
         dataPath: path.join(ctx.baseDir, "data", config.authSessionLocation),
       }),
+      puppeteer: {
+        args: puppeteerArgs,
+      },
     });
 
     ctx.plugin(WhatsAppAdapter, this);
@@ -111,12 +122,14 @@ export class WhatsAppBot<C extends Context = Context> extends Bot<C> {
 export namespace WhatsAppBot {
   export interface Config {
     authSessionLocation?: string;
-    selfId?: string;
+    noSandBox?: boolean;
+    disableSetuidSandbox?: boolean;
   }
   export const Config: Schema<Config> = Schema.object({
     authSessionLocation: Schema.string()
-      .description("登入信息存放位置名称，存放在data下")
+      .description("登入信息存放位置名称，存放在data下 Login information storage location name, stored in data")
       .default("adapter-whatsapp-web"),
-    selfId: Schema.string().description("自身ID").hidden(),
+    noSandBox: Schema.boolean().description("是否禁用沙盒模式 Disable sandbox mode").default(false),
+    disableSetuidSandbox: Schema.boolean().description("是否禁用setuid沙盒 Disable setuid sandbox").default(false),
   });
 }
